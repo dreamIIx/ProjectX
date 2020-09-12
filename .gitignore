@@ -1,0 +1,12 @@
+/testzone
+/testzone2
+/tx
+/.vscode
+hero.cpp
+hero.h
+*.o
+*.kra~
+Test
+Test_spec
+build_test
+build_test_spec
