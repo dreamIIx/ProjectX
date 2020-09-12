@@ -40,6 +40,24 @@
 #define ER_IFN(x, beforeExc, AfterExc) if ( !(x) ) { beforeExc ERROR_ AfterExc }
 #endif
 
+#if defined(_WIN32)
+	#include <Windows.h>
+	typedef HCRYPTPROV dxCRYPT;
+	typedef unsigned long int dxFastInt32;
+#elif defined(__unix__)
+    #if defined(__linux__)
+		#include <random>
+		#include <chrono>
+		typedef ::std::mt19937 dxCRYPT;
+		typedef uint_fast32_t dxFastInt32;
+		#define	def_FILEROOT "/run/media/dream11x/dreamIIx/programming/C++/Project2/x64/Debug/"
+    #else
+        #error This UNIX operating system is not supported by dx::NN
+    #endif
+#else
+    #error This operating system is not supported by dx::NN
+#endif
+
 #define ISBIT(x,pos)            ( ( (x) & ( 0x1 << (pos) ) ) != 0 )
 #define GETBIT(x,pos)           ( (x) & ( 0x1 << (pos) ) )
 #define GETBITS(x,y,pos)        ( (x) & ( y << (pos) ) )
@@ -47,6 +65,12 @@
 #define UNSETBIT(x,pos)         ( (x) &= (~( 0x1 << (pos) ) ) )
 #define SETBITS(x,y,pos)        ( (x) |= ( y << (pos) ) )
 #define UNSETBITS(x,y,pos)      ( (x) &= (~( y << (pos) ) ) )
+
+namespace nndx
+{
+	dxFastInt32 randT(dxCRYPT&);
+	dxFastInt32 randB(dxCRYPT&);
+}
 
 namespace bmdx
 {
@@ -72,6 +96,7 @@ public:
     ~CyclePoint();
 
     sf::Color getColor();
+    void setColor(sf::Color Color);
     void setOptions(decltype(options) options);
     decltype(options) getOptions();
 };
