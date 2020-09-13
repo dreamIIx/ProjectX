@@ -132,7 +132,7 @@ decltype(CyclePoint::options) CyclePoint::getOptions()
     return options;
 }
 
-Bicycle::Bicycle() : is_Inited(false)
+Bicycle::Bicycle() : is_Inited(false), U(1u)
 {
 
 }
@@ -147,7 +147,7 @@ bool Bicycle::initCycle(float r, float x0, float y0, size_t K, sf::Color defColo
     ER_IF(r <= 0,, return false; )
     ER_IF(K <= 0,, return false; )
 
-    coord startX = -r * sqrt(2) / 2;
+    coord startX = r * sqrt(2) / 2;
     coord startY = r * sqrt(2) / 2;
     coord incXY = r * sqrt(2) / K;
     double SqrR = pow(r, 2.);
@@ -156,19 +156,19 @@ bool Bicycle::initCycle(float r, float x0, float y0, size_t K, sf::Color defColo
     DrawAbleCycle1.reserve(4 * K);
     
     coord x = startX + x0;
-    coord y = sqrt(SqrR - pow(x - x0, 2.)) + y0;
+    coord y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
     DrawAbleCycle1.emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor));
     vCycle.emplace_back(CyclePoint(&DrawAbleCycle1.back(), 0x0, nullptr, nullptr));
     pPrev = &vCycle.back();
-    x += incXY;
+    x -= incXY;
     for(size_t i = 1ull; i < K; ++i)
     {
-        y = sqrt(SqrR - pow(x - x0, 2.)) + y0;
+        y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
         DrawAbleCycle1.emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor));
         vCycle.emplace_back(CyclePoint(&DrawAbleCycle1.back(), 0x0, pPrev, nullptr));
         pPrev->next = &vCycle.back();
         pPrev = &vCycle.back();
-        x += incXY;
+        x -= incXY;
     }
 
     ER_IF(vCycle.size() != K,
@@ -199,12 +199,12 @@ bool Bicycle::initCycle(float r, float x0, float y0, size_t K, sf::Color defColo
     x = -startX + x0;
     for(size_t i = 0ull; i < K; ++i)
     {
-        y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
+        y = sqrt(SqrR - pow(x - x0, 2.)) + y0;
         DrawAbleCycle1.emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor));
         vCycle.emplace_back(CyclePoint(&DrawAbleCycle1.back(), 0x0, pPrev, nullptr));
         pPrev->next = &vCycle.back();
         pPrev = &vCycle.back();
-        x -= incXY;
+        x += incXY;
     }
 
     ER_IF(vCycle.size() != 3 * K,
@@ -243,14 +243,43 @@ bool Bicycle::drawBicycle(sf::RenderWindow& win)
     ER_IFN(win.isOpen(),, return false; )
     ER_IFN(is_Inited,, return false; )
 
-    win.draw(&DrawAbleCycle1[0], DrawAbleCycle1.size(), sf::Points);
-    /*
-    for(size_t i = 0ull; i < DrawAbleCycle1.size(); ++i)
+    //win.draw(&DrawAbleCycle1[0], DrawAbleCycle1.size(), sf::Points);
+    
+    for(size_t i = 0ull; i < vCycle.size(); ++i)
     {
-        win.draw(&DrawAbleCycle1[i], 1, sf::Points);
+        win.draw(vCycle[i].pPoint, 1, sf::Points);
     }
-    */
+    
     return true;
+}
+
+bool Bicycle::mA()
+{
+    ER_IFN(this->is_Inited, ::std::cout << "is_Inited - " << this->is_Inited << ::std::endl;, return false;)
+
+    for(decltype(Bicycle::U) i = 0; i < U; ++i)
+    {
+        auto First = vCycle[0].pPoint;
+        for(size_t i = 0ull; i < this->vCycle.size() - 1; ++i)
+        {
+			::std::cout << i << ::std::endl;
+            vCycle[i].pPoint->color = vCycle[i + 1].pPoint->color;
+            vCycle[i].pPoint = vCycle[i + 1].pPoint;
+        }
+        vCycle.back().pPoint = First;
+    }
+
+    return true;
+}
+
+void Bicycle::setSpeed(decltype(Bicycle::U) aSpeed)
+{
+    this->U = aSpeed;
+}
+
+decltype(Bicycle::U) Bicycle::getSpeed()
+{
+    return U;
 }
 
 bool Bicycle::getState()

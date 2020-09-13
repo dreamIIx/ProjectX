@@ -15,11 +15,13 @@
 #endif
 #endif
 
-#define COUNTBICYCLES 5
-#define DEFRADIUSBICYCLE 150.f
-#define X0BICYCLES 450.f
-#define Y0BICYCLES 200.f
+#define COUNTBICYCLES 50
+#define DEFRADIUSBICYCLE 260.f
+#define DELT_MINUSRADIUS -1.f
+#define X0BICYCLES 650.f
+#define Y0BICYCLES 300.f
 #define K_BICYCLE 180
+#define SPEEDMA 50
 
 constexpr unsigned int def_WIN_X = 900;
 constexpr unsigned int def_WIN_Y = 400;
@@ -136,37 +138,44 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 	for(size_t i = 0ull; i < COUNTBICYCLES; ++i)
 	{
 		vBicycle.emplace_back(bmdx::Bicycle());
-		ER_IFN(vBicycle.back().initCycle(DEFRADIUSBICYCLE - 10.f * i, X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color::Red),, )
+		ER_IFN(vBicycle.back().initCycle(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
+			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(65, 65, 65, 255)),, )
 	}
 	
 	for(size_t i = 0ull; i < vBicycle.size(); ++i)
 	{
-		auto pFirst = &vBicycle[i].vCycle.front();
-		ER_IF(pFirst == nullptr,, )
-		auto pCur = vBicycle[i].vCycle.front().next;
-		ER_IF(pCur == nullptr,, )
-		auto fFill = nndx::randB(hProv) % 100;
-		if (fFill < 20)
+		if (i == 0ull)
 		{
-			pCur->setColor(sf::Color::Cyan);
-		}
-		while(pCur != pFirst)
-		{
-			pCur = pCur->next;
+			auto pFirst = &vBicycle[i].vCycle.front();
+			ER_IF(pFirst == nullptr,, )
+			auto pCur = vBicycle[i].vCycle.front().next;
 			ER_IF(pCur == nullptr,, )
-			fFill = nndx::randB(hProv) % 100;
-			if (fFill < 20)
+			auto fFill = nndx::randB(hProv) % 100;
+			if (fFill < 10)
 			{
-				pCur->setColor(sf::Color::Cyan);
+				pFirst->setColor(sf::Color::Red);
+				pCur->setColor(sf::Color::Red);
+			}
+			while(pCur != pFirst)
+			{
+				pCur = pCur->next;
+				ER_IF(pCur == nullptr,, )
+				fFill = nndx::randB(hProv) % 100;
+				if (fFill < 10)
+				{
+					pCur->setColor(sf::Color::Red);
+				}
 			}
 		}
 	}
 	
 	//sf::Vector2i mouse_pos;
-
+	
+    ::std::chrono::time_point<::std::chrono::system_clock> startTime;
 	//mA
 	while (is_Open.load())
 	{
+		startTime = std::chrono::system_clock::now();
 		//mouse_pos = static_cast<sf::Vector2i>(win.mapPixelToCoords(sf::Mouse::getPosition(win)));
 
 		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
@@ -174,9 +183,9 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 		for(size_t i = 0ull; i < vBicycle.size(); ++i)
 		{
 			auto pFirst = &vBicycle[i].vCycle.front();
-			ER_IF(pFirst == nullptr,, )
+			//ER_IF(pFirst == nullptr,, )
 			auto pCur = vBicycle[i].vCycle.front().next;
-			ER_IF(pCur == nullptr,, )
+			//ER_IF(pCur == nullptr,, )
 			auto FirstColor = pFirst->getColor();
 			auto FirstOpt = pFirst->getOptions();
 			pFirst->setColor(pCur->getColor());
@@ -184,7 +193,7 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 			while(pCur != pFirst->prev)
 			{
 				pCur = pCur->next;
-				ER_IF(pCur == nullptr,, )
+				//ER_IF(pCur == nullptr,, )
 				pCur->prev->setColor(pCur->getColor());
 				pCur->prev->setOptions(pCur->getOptions());
 			}
@@ -192,7 +201,35 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 			pCur->setOptions(FirstOpt);
 		}
 
-		win.clear();
+		for(size_t i = 1ull; i < vBicycle.size(); ++i)
+		{
+			for(size_t j = 0ull; j < vBicycle[i].vCycle.size(); ++j)
+			{
+				vBicycle[i].vCycle[j].setColor(vBicycle[0].vCycle[j].getColor());
+			}
+		}
+
+		{
+			using namespace ::std::chrono;
+			typedef microseconds TIME_T;
+			typedef system_clock CLOCK_T;
+			/*
+			::std::cout << static_cast<unsigned short>(SPEEDMA *
+					duration_cast<TIME_T>(CLOCK_T::now() - startTime).count() / 1600) << ::std::endl;
+			char ch;
+			::std::cin >> ch;
+			*/
+			for(auto& x : vBicycle)
+			{
+				::std::cout << 1 << ::std::endl;
+				x.setSpeed(static_cast<unsigned short>(SPEEDMA * duration_cast<TIME_T>(CLOCK_T::now() - startTime).count() / 1600));
+				::std::cout << 2 << ::std::endl;
+				x.mA();
+				::std::cout << 3 << ::std::endl;
+			}
+		}
+
+		win.clear(/*sf::Color::White*/);
 		win.setView(view);
 		for(auto& x : vBicycle)
 		{

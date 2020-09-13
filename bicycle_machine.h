@@ -106,6 +106,7 @@ class Bicycle
 private:
     std::vector<sf::Vertex> DrawAbleCycle1;
     bool is_Inited;
+    unsigned short U;
 
 public:
     ::std::vector<CyclePoint> vCycle;
@@ -115,7 +116,10 @@ public:
 
     bool initCycle(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color defaultColor/*, ::std::map<size_t, CyclePoint> specDefs = {}*/);
     bool drawBicycle(sf::RenderWindow& RenderWindow);
+    bool mA();
 
+    void setSpeed(decltype(U) Speed);
+    decltype(U) getSpeed();
     bool getState();
 };
 
