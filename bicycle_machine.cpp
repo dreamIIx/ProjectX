@@ -259,14 +259,29 @@ bool Bicycle::mA()
 
     for(decltype(Bicycle::U) i = 0; i < U; ++i)
     {
+        /*
         auto First = vCycle[0].pPoint;
         for(size_t i = 0ull; i < this->vCycle.size() - 1; ++i)
         {
-			::std::cout << i << ::std::endl;
             vCycle[i].pPoint->color = vCycle[i + 1].pPoint->color;
             vCycle[i].pPoint = vCycle[i + 1].pPoint;
         }
         vCycle.back().pPoint = First;
+        */
+        auto pFirst = &vCycle.front();
+        auto pCur = vCycle.front().next;
+        auto FirstColor = pFirst->getColor();
+        auto FirstOpt = pFirst->getOptions();
+        pFirst->setColor(pCur->getColor());
+        pFirst->setOptions(pCur->getOptions());
+        while(pCur != pFirst->prev)
+        {
+            pCur = pCur->next;
+            pCur->prev->setColor(pCur->getColor());
+            pCur->prev->setOptions(pCur->getOptions());
+        }
+        pCur->setColor(FirstColor);
+        pCur->setOptions(FirstOpt);
     }
 
     return true;

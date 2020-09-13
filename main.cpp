@@ -15,20 +15,20 @@
 #endif
 #endif
 
-#define COUNTBICYCLES 50
-#define DEFRADIUSBICYCLE 260.f
-#define DELT_MINUSRADIUS -1.f
+#define COUNTBICYCLES 5
+#define DEFRADIUSBICYCLE 150.f
+#define DELT_MINUSRADIUS -2.f
 #define X0BICYCLES 650.f
 #define Y0BICYCLES 300.f
 #define K_BICYCLE 180
-#define SPEEDMA 50
 
 constexpr unsigned int def_WIN_X = 900;
 constexpr unsigned int def_WIN_Y = 400;
 
 dxCRYPT hProv;
 
-void mainA(sf::RenderWindow&, sf::View&, volatile ::std::atomic_bool&);
+void mainA(sf::RenderWindow&, sf::View&, volatile ::std::atomic_bool&,
+	volatile ::std::atomic<unsigned short>&, volatile ::std::atomic_bool&);
 
 int main(int argc, char** argv)
 {
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 	sf::RenderWindow win({ def_WIN_X, def_WIN_Y }, "ProjectX");
 	win.setVerticalSyncEnabled(true);
 	win.setActive(false);
-	win.setFramerateLimit(60);
+	//win.setFramerateLimit(60);
 
 #if defined(_WIN32)
 	if (!CryptAcquireContext(&hProv, 0, NULL, PROV_RSA_FULL, 0))
@@ -71,9 +71,13 @@ int main(int argc, char** argv)
 	view.reset(sf::FloatRect(0.0f, 0.0f, static_cast<float>(def_WIN_X), static_cast<float>(def_WIN_Y)));
 
 	volatile ::std::atomic_bool isOpen;
+	volatile ::std::atomic_bool nativeSpeed;
+	volatile ::std::atomic<unsigned short> speedmA;
 	isOpen.store(true);
+	nativeSpeed.store(true);
+	speedmA.store(15);
 
-	::std::thread mainThread(mainA, ::std::ref(win), ::std::ref(view), ::std::ref(isOpen));
+	::std::thread mainThread(mainA, ::std::ref(win), ::std::ref(view), ::std::ref(isOpen), ::std::ref(speedmA), ::std::ref(nativeSpeed));
 
 	while (isOpen.load())
 	{
@@ -87,17 +91,21 @@ int main(int argc, char** argv)
 			}
 			else if (event.type == sf::Event::KeyPressed)
 			{
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::O))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 				{
-
+					auto x = speedmA.load();
+					if (x > 5)	speedmA.store(x - 5);
 				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 				{
-
+					auto x = speedmA.load();
+					speedmA.store(x + 15);
 				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 				{
-
+					auto x = nativeSpeed.load();
+					nativeSpeed.store(!x);
+					::std::cout << "nativeSpeed - " << (!x ? "true" : "false") << ::std::endl;
 				}
 				else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::RShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)))
 				{
@@ -118,7 +126,12 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& is_Open)
+void mainA(
+	sf::RenderWindow& win,
+	sf::View& view,
+	volatile ::std::atomic_bool& __is_Open,
+	volatile ::std::atomic<unsigned short>& SpeedmA,
+	volatile ::std::atomic_bool& __NativeSpeed)
 {
 #if defined(_WIN32)
 #elif defined(__unix__)
@@ -150,57 +163,60 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 			ER_IF(pFirst == nullptr,, )
 			auto pCur = vBicycle[i].vCycle.front().next;
 			ER_IF(pCur == nullptr,, )
-			auto fFill = nndx::randB(hProv) % 100;
-			if (fFill < 10)
-			{
-				pFirst->setColor(sf::Color::Red);
-				pCur->setColor(sf::Color::Red);
-			}
+			auto fFill = K_BICYCLE * 4 - 1;
+			pFirst->setColor(sf::Color::Red);
+			pCur->setColor(sf::Color::Red);
 			while(pCur != pFirst)
 			{
 				pCur = pCur->next;
 				ER_IF(pCur == nullptr,, )
-				fFill = nndx::randB(hProv) % 100;
-				if (fFill < 10)
+				//fFill = nndx::randB(hProv) % 100;
+				if ((fFill >= 0) && (fFill % 40 <= 4))
 				{
 					pCur->setColor(sf::Color::Red);
 				}
+				--fFill;
 			}
 		}
 	}
 	
 	//sf::Vector2i mouse_pos;
 	
-    ::std::chrono::time_point<::std::chrono::system_clock> startTime;
+	//typedef ::std::chrono::steady_clock __CLOCK_T;
+	typedef ::std::chrono::system_clock __CLOCK_T;
+    ::std::chrono::time_point<__CLOCK_T> startTime;
 	//mA
-	while (is_Open.load())
+	while (__is_Open.load())
 	{
-		startTime = std::chrono::system_clock::now();
+		startTime = __CLOCK_T::now();
 		//mouse_pos = static_cast<sf::Vector2i>(win.mapPixelToCoords(sf::Mouse::getPosition(win)));
 
 		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
-
-		for(size_t i = 0ull; i < vBicycle.size(); ++i)
+/*
+		for(size_t i = 0ull; i < SPEEDMA.load(); ++i)
 		{
-			auto pFirst = &vBicycle[i].vCycle.front();
-			//ER_IF(pFirst == nullptr,, )
-			auto pCur = vBicycle[i].vCycle.front().next;
-			//ER_IF(pCur == nullptr,, )
-			auto FirstColor = pFirst->getColor();
-			auto FirstOpt = pFirst->getOptions();
-			pFirst->setColor(pCur->getColor());
-			pFirst->setOptions(pCur->getOptions());
-			while(pCur != pFirst->prev)
+			for(size_t i = 0ull; i < vBicycle.size(); ++i)
 			{
-				pCur = pCur->next;
+				auto pFirst = &vBicycle[i].vCycle.front();
+				//ER_IF(pFirst == nullptr,, )
+				auto pCur = vBicycle[i].vCycle.front().next;
 				//ER_IF(pCur == nullptr,, )
-				pCur->prev->setColor(pCur->getColor());
-				pCur->prev->setOptions(pCur->getOptions());
+				auto FirstColor = pFirst->getColor();
+				auto FirstOpt = pFirst->getOptions();
+				pFirst->setColor(pCur->getColor());
+				pFirst->setOptions(pCur->getOptions());
+				while(pCur != pFirst->prev)
+				{
+					pCur = pCur->next;
+					//ER_IF(pCur == nullptr,, )
+					pCur->prev->setColor(pCur->getColor());
+					pCur->prev->setOptions(pCur->getOptions());
+				}
+				pCur->setColor(FirstColor);
+				pCur->setOptions(FirstOpt);
 			}
-			pCur->setColor(FirstColor);
-			pCur->setOptions(FirstOpt);
 		}
-
+*/
 		for(size_t i = 1ull; i < vBicycle.size(); ++i)
 		{
 			for(size_t j = 0ull; j < vBicycle[i].vCycle.size(); ++j)
@@ -212,20 +228,13 @@ void mainA(sf::RenderWindow& win, sf::View& view, volatile ::std::atomic_bool& i
 		{
 			using namespace ::std::chrono;
 			typedef microseconds TIME_T;
-			typedef system_clock CLOCK_T;
-			/*
-			::std::cout << static_cast<unsigned short>(SPEEDMA *
-					duration_cast<TIME_T>(CLOCK_T::now() - startTime).count() / 1600) << ::std::endl;
-			char ch;
-			::std::cin >> ch;
-			*/
+			auto SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 10600);
+			//::std::cout << SpeedX << ::std::endl;
 			for(auto& x : vBicycle)
 			{
-				::std::cout << 1 << ::std::endl;
-				x.setSpeed(static_cast<unsigned short>(SPEEDMA * duration_cast<TIME_T>(CLOCK_T::now() - startTime).count() / 1600));
-				::std::cout << 2 << ::std::endl;
+				if (__NativeSpeed.load())	x.setSpeed(SpeedmA.load());
+				else	x.setSpeed(SpeedX);
 				x.mA();
-				::std::cout << 3 << ::std::endl;
 			}
 		}
 
