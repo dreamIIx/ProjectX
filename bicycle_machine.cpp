@@ -256,28 +256,30 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color de
     return true;
 }
 
-bool Bicycle::drawBicycle(sf::RenderWindow& win, sf::Texture* tx = nullptr, int drawOpt = 0x0)
+bool Bicycle::drawBicycle(sf::RenderWindow& win, bool func(bmdx::CyclePoint*), sf::Texture* tx = nullptr)
 {
     ER_IFN(win.isOpen(),, return false; )
     ER_IFN(is_Inited,, return false; )
 
+/*
     for(size_t i = 0ull; i < vvDrawAbleCycle.size(); ++i)
     {
-        win.draw(&vvDrawAbleCycle[i][0], vvDrawAbleCycle[i].size(), sf::Points);
+        win.draw(&vvDrawAbleCycle[i][0], vvDrawAbleCycle[i].size(), sf::Points, tx); // without func() checking
     }
-/*
+*/
     for(size_t i = 0ull; i < vvCycle.size(); ++i)
     {
         for(size_t j = 0ull; j < vvCycle[i].size(); ++j)
         {
-            win.draw(vvCycle[i][j].pPoint, 1, sf::Points, tx);
+            auto x = vvCycle[i][j];
+            if (func(&x)) win.draw(x.pPoint, 1, sf::Points, tx);
         }
     }
-*/
+
     return true;
 }
 
-bool Bicycle::drawBicycle(sf::RenderWindow& win, size_t idx1, size_t idx2, sf::Texture* tx = nullptr, int drawOpt = 0x0)
+bool Bicycle::drawBicycle(sf::RenderWindow& win, size_t idx1, size_t idx2, bool func(bmdx::CyclePoint*), sf::Texture* tx = nullptr)
 {
     ER_IFN(win.isOpen(),, return false; )
     ER_IFN(is_Inited,, return false; )
@@ -285,19 +287,20 @@ bool Bicycle::drawBicycle(sf::RenderWindow& win, size_t idx1, size_t idx2, sf::T
     ER_IF(idx2 >= vvCycle.size() || idx2 < 0, ::std::cout << "idx2 >= vvCycle().size() || idx2 < 0" << ::std::endl;, return false; )
     ER_IF(idx1 >= idx2, ::std::cout << "idx1 >= idx2," << ::std::endl;, return false; )
 
+/*
     for(size_t i = 0ull; i < vvDrawAbleCycle.size(); ++i)
     {
-        win.draw(&vvDrawAbleCycle[i][0], vvDrawAbleCycle[i].size(), sf::Points);
+        win.draw(&vvDrawAbleCycle[i][0], vvDrawAbleCycle[i].size(), sf::Points, tx); // without func() checking
     }
-/*
+*/
     for(size_t i = idx1; i < idx2; ++i)
     {
         for(size_t j = 0ull; j < vvCycle[i].size(); ++j)
         {
-            win.draw(vvCycle[i][j].pPoint, 1, sf::Points, tx);
+            auto x = vvCycle[i][j];
+            if (func(&x)) win.draw(x.pPoint, 1, sf::Points, tx);
         }
     }
-*/
     
     return true;
 }
@@ -310,23 +313,13 @@ bool Bicycle::mA()
     {
         for(decltype(Bicycle::U) i = 0; i < U; ++i)
         {
-            /*
-            CHECK WORK
-            auto First = vvCycle[j][0].pPoint;
-            for(size_t i = 0ull; i < this->vvCycle[j].size() - 1; ++i)
-            {
-                vvCycle[j][i].pPoint->color = vvCycle[j][i + 1].pPoint->color;
-                vvCycle[j][i].pPoint = vvCycle[j][i + 1].pPoint;
-            }
-            vvCycle[j].back().pPoint = First;
-            */
             auto pFirst = &vvCycle[j].front();
             auto pCur = vvCycle[j].front().next;
             auto FirstColor = pFirst->getColor();
             auto FirstOpt = pFirst->getOptions();
-            pFirst->setColor(pCur->next->next->next->getColor()); // <<<<<-------  THIS
+            pFirst->setColor(pCur->getColor()); // <<<<<-------  THIS
             pFirst->setOptions(pCur->getOptions());
-            while(pCur != pFirst)
+            while(pCur != pFirst->prev)
             {
                 pCur = pCur->next;
                 pCur->prev->setColor(pCur->getColor());

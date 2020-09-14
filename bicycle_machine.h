@@ -61,10 +61,14 @@
 #define ISBIT(x,pos)            ( ( (x) & ( 0x1 << (pos) ) ) != 0 )
 #define GETBIT(x,pos)           ( (x) & ( 0x1 << (pos) ) )
 #define GETBITS(x,y,pos)        ( (x) & ( y << (pos) ) )
-#define SETBIT(x,pos)           ( (x) |= ( 0x1 << (pos) ) )
-#define UNSETBIT(x,pos)         ( (x) &= (~( 0x1 << (pos) ) ) )
-#define SETBITS(x,y,pos)        ( (x) |= ( y << (pos) ) )
-#define UNSETBITS(x,y,pos)      ( (x) &= (~( y << (pos) ) ) )
+#define EQ_SETBIT(x,pos)        ( (x) |= ( 0x1 << (pos) ) )
+#define EQ_UNSETBIT(x,pos)      ( (x) &= (~( 0x1 << (pos) ) ) )
+#define EQ_SETBITS(x,y,pos)     ( (x) |= ( y << (pos) ) )
+#define EQ_UNSETBITS(x,y,pos)   ( (x) &= (~( y << (pos) ) ) )
+#define SETBIT(x,pos)           ( (x) | ( 0x1 << (pos) ) )
+#define UNSETBIT(x,pos)         ( (x) & (~( 0x1 << (pos) ) ) )
+#define SETBITS(x,y,pos)        ( (x) | ( y << (pos) ) )
+#define UNSETBITS(x,y,pos)      ( (x) & (~( y << (pos) ) ) )
 
 namespace nndx
 {
@@ -83,14 +87,19 @@ class CyclePoint
 private:
     sf::Vertex* pPoint;
     ///
-    // ...|     2    |   1  |  5  ||
-    // ...| reserved | flag | idx ||
+    // ...|  2[7..6] |  1[5]  |  5[4..0] ||
+    // ...| reserved |  flag  |    idx   ||
     ///
     int options;
 
 public:
     CyclePoint* prev;
     CyclePoint* next;
+
+    enum OPTIONS : int
+    {
+        DRAW = 5
+    };
 
     CyclePoint(sf::Vertex* rfPoint, int opt, CyclePoint* prev, CyclePoint* next);
     ~CyclePoint();
@@ -118,8 +127,8 @@ public:
     sf::Texture* addTx(const char* Filename);
     bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color defaultColor,
         float TextureX0 = 0.f, float TextureY0 = 0.f);
-    bool drawBicycle(sf::RenderWindow& RenderWindow, sf::Texture* DrawTexture = nullptr, int CheckDrawOpt = 0x0);
-    bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, sf::Texture* DrawTexture = nullptr, int CheckDrawOpt = 0x0);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
     bool mA();
 
     void setSpeed(decltype(U) Speed);

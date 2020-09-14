@@ -15,15 +15,16 @@
 #endif
 #endif
 
-#define COUNTCYCLES 250
-#define DEFRADIUSBICYCLE 350.f
+#define COUNTCYCLES 150
+#define DEFRADIUSBICYCLE 150.f
 #define DELT_MINUSRADIUS -1.f
-#define X0BICYCLES 650.f
-#define Y0BICYCLES 300.f
-#define K_BICYCLE 180
+#define X0BICYCLES 450.f
+#define Y0BICYCLES 200.f
+#define K_BICYCLE 90
 
 constexpr unsigned int def_WIN_X = 900;
 constexpr unsigned int def_WIN_Y = 400;
+constexpr unsigned long def_FPS = 60ul;
 
 #if defined(_WIN32)
 constexpr const char* file_image_1 = "files/image_1_750.jpg";
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
 	sf::RenderWindow win({ def_WIN_X, def_WIN_Y }, "ProjectX");
 	win.setVerticalSyncEnabled(true);
 	win.setActive(false);
-	//win.setFramerateLimit(60);
+	win.setFramerateLimit(def_FPS);
 
 #if defined(_WIN32)
 	if (!CryptAcquireContext(&hProv, 0, NULL, PROV_RSA_FULL, 0))
@@ -87,7 +88,7 @@ int main(int argc, char** argv)
 	volatile ::std::atomic<unsigned short> speedmA;
 	isOpen.store(true);
 	nativeSpeed.store(true);
-	speedmA.store(15);
+	speedmA.store(1);
 
 	::std::thread mainThread(mainA, ::std::ref(win), ::std::ref(view), ::std::ref(isOpen), ::std::ref(speedmA), ::std::ref(nativeSpeed));
 
@@ -161,32 +162,35 @@ void mainA(
 
 	bmdx::Bicycle Bicycle1;
 	Bicycle1.vvCycle.reserve(COUNTCYCLES);
-	for(size_t i = 0ull; i < COUNTCYCLES; ++i)
+	for(size_t i = 0ul; i < COUNTCYCLES; ++i)
 	{
 		ER_IFN(Bicycle1.initCycle2Back(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
-			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(65, 65, 65, 255), X0BICYCLES, Y0BICYCLES),, )
+			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(0, 0, 0, 0), X0BICYCLES, Y0BICYCLES),, )
 	}
 	sf::Texture* pTx = Bicycle1.addTx(file_image_1);
 	
-	for(size_t i = 0ull; i < Bicycle1.vvCycle.size(); ++i)
+	for(size_t i = 0ul; i < Bicycle1.vvCycle.size(); ++i)
 	{
-		if (i == 0ull)
+		if (i == 0ul)
 		{
 			auto pFirst = &Bicycle1.vvCycle[i].front();
 			ER_IF(pFirst == nullptr,, )
 			auto pCur = Bicycle1.vvCycle[i].front().next;
 			ER_IF(pCur == nullptr,, )
-			auto fFill = K_BICYCLE * 4 - 1;
-			pFirst->setColor(sf::Color::Red);
-			pCur->setColor(sf::Color::Red);
+			int fFill = static_cast<unsigned int>(38ul/*K_BICYCLE * 0.5 - 2*/);
+			pFirst->setColor(sf::Color(255, 255, 255, 255));
+			pFirst->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
+			pCur->setColor(sf::Color(255, 255, 255, 255));
+			pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
 			while(pCur != pFirst)
 			{
 				pCur = pCur->next;
 				ER_IF(pCur == nullptr,, )
 				//fFill = nndx::randB(hProv) % 100;
-				if ((fFill >= 0) && (fFill % 40 <= 4))
+				if ((fFill >= 0) && (fFill % 40 >= 34))
 				{
-					pCur->setColor(sf::Color::Red);
+					pCur->setColor(sf::Color(255, 255, 255, 255));
+					pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
 				}
 				--fFill;
 			}
@@ -202,39 +206,13 @@ void mainA(
 	while (__is_Open.load())
 	{
 		startTime = __CLOCK_T::now();
-		//mouse_pos = static_cast<sf::Vector2i>(win.mapPixelToCoords(sf::Mouse::getPosition(win)));
 
-		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
-/*
-		for(size_t i = 0ull; i < SPEEDMA.load(); ++i)
-		{
-			for(size_t i = 0ull; i < vBicycle.size(); ++i)
-			{
-				auto pFirst = &vBicycle[i].vCycle.front();
-				//ER_IF(pFirst == nullptr,, )
-				auto pCur = vBicycle[i].vCycle.front().next;
-				//ER_IF(pCur == nullptr,, )
-				auto FirstColor = pFirst->getColor();
-				auto FirstOpt = pFirst->getOptions();
-				pFirst->setColor(pCur->getColor());
-				pFirst->setOptions(pCur->getOptions());
-				while(pCur != pFirst->prev)
-				{
-					pCur = pCur->next;
-					//ER_IF(pCur == nullptr,, )
-					pCur->prev->setColor(pCur->getColor());
-					pCur->prev->setOptions(pCur->getOptions());
-				}
-				pCur->setColor(FirstColor);
-				pCur->setOptions(FirstOpt);
-			}
-		}
-*/
 		for(size_t i = 1ull; i < Bicycle1.vvCycle.size(); ++i)
 		{
-			for(size_t j = 0ull; j < Bicycle1.vvCycle[i].size(); ++j)
+			for(size_t j = 0ul; j < Bicycle1.vvCycle[i].size(); ++j)
 			{
 				Bicycle1.vvCycle[i][j].setColor(Bicycle1.vvCycle[0][j].getColor());
+				Bicycle1.vvCycle[i][j].setOptions(Bicycle1.vvCycle[0][j].getOptions());
 			}
 		}
 
@@ -248,9 +226,11 @@ void mainA(
 			Bicycle1.mA();
 		}
 
+		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
+
 		win.clear(/*sf::Color::White*/);
 		win.setView(view);
-		Bicycle1.drawBicycle(win, pTx);
+		Bicycle1.drawBicycle(win, [](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, pTx);
 		//win.draw();
 		win.display();
 	}
