@@ -15,15 +15,27 @@
 #endif
 #endif
 
-#define COUNTBICYCLES 5
-#define DEFRADIUSBICYCLE 150.f
-#define DELT_MINUSRADIUS -2.f
+#define COUNTCYCLES 250
+#define DEFRADIUSBICYCLE 350.f
+#define DELT_MINUSRADIUS -1.f
 #define X0BICYCLES 650.f
 #define Y0BICYCLES 300.f
 #define K_BICYCLE 180
 
 constexpr unsigned int def_WIN_X = 900;
 constexpr unsigned int def_WIN_Y = 400;
+
+#if defined(_WIN32)
+constexpr const char* file_image_1 = "files/image_1_750.jpg";
+#elif defined(__unix__)
+    #if defined(__linux__)
+constexpr const char* file_image_1 = "./files/image_1_750.jpg";
+    #else
+        #error This UNIX operating system is not supported by dx::NN
+    #endif
+#else
+    #error This operating system is not supported by dx::NN
+#endif
 
 dxCRYPT hProv;
 
@@ -95,6 +107,7 @@ int main(int argc, char** argv)
 				{
 					auto x = speedmA.load();
 					if (x > 5)	speedmA.store(x - 5);
+					else if (x > 2)	speedmA.store(x - 1);
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 				{
@@ -146,22 +159,22 @@ void mainA(
 	
 	win.setActive(true);
 
-	::std::vector<bmdx::Bicycle> vBicycle;
-	vBicycle.reserve(COUNTBICYCLES);
-	for(size_t i = 0ull; i < COUNTBICYCLES; ++i)
+	bmdx::Bicycle Bicycle1;
+	Bicycle1.vvCycle.reserve(COUNTCYCLES);
+	for(size_t i = 0ull; i < COUNTCYCLES; ++i)
 	{
-		vBicycle.emplace_back(bmdx::Bicycle());
-		ER_IFN(vBicycle.back().initCycle(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
-			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(65, 65, 65, 255)),, )
+		ER_IFN(Bicycle1.initCycle2Back(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
+			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(65, 65, 65, 255), X0BICYCLES, Y0BICYCLES),, )
 	}
+	sf::Texture* pTx = Bicycle1.addTx(file_image_1);
 	
-	for(size_t i = 0ull; i < vBicycle.size(); ++i)
+	for(size_t i = 0ull; i < Bicycle1.vvCycle.size(); ++i)
 	{
 		if (i == 0ull)
 		{
-			auto pFirst = &vBicycle[i].vCycle.front();
+			auto pFirst = &Bicycle1.vvCycle[i].front();
 			ER_IF(pFirst == nullptr,, )
-			auto pCur = vBicycle[i].vCycle.front().next;
+			auto pCur = Bicycle1.vvCycle[i].front().next;
 			ER_IF(pCur == nullptr,, )
 			auto fFill = K_BICYCLE * 4 - 1;
 			pFirst->setColor(sf::Color::Red);
@@ -217,11 +230,11 @@ void mainA(
 			}
 		}
 */
-		for(size_t i = 1ull; i < vBicycle.size(); ++i)
+		for(size_t i = 1ull; i < Bicycle1.vvCycle.size(); ++i)
 		{
-			for(size_t j = 0ull; j < vBicycle[i].vCycle.size(); ++j)
+			for(size_t j = 0ull; j < Bicycle1.vvCycle[i].size(); ++j)
 			{
-				vBicycle[i].vCycle[j].setColor(vBicycle[0].vCycle[j].getColor());
+				Bicycle1.vvCycle[i][j].setColor(Bicycle1.vvCycle[0][j].getColor());
 			}
 		}
 
@@ -230,20 +243,14 @@ void mainA(
 			typedef microseconds TIME_T;
 			auto SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 10600);
 			//::std::cout << SpeedX << ::std::endl;
-			for(auto& x : vBicycle)
-			{
-				if (__NativeSpeed.load())	x.setSpeed(SpeedmA.load());
-				else	x.setSpeed(SpeedX);
-				x.mA();
-			}
+			if (__NativeSpeed.load())	Bicycle1.setSpeed(SpeedmA.load());
+			else	Bicycle1.setSpeed(SpeedX);
+			Bicycle1.mA();
 		}
 
 		win.clear(/*sf::Color::White*/);
 		win.setView(view);
-		for(auto& x : vBicycle)
-		{
-			x.drawBicycle(win);
-		}
+		Bicycle1.drawBicycle(win, pTx);
 		//win.draw();
 		win.display();
 	}

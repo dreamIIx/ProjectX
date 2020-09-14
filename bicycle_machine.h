@@ -104,18 +104,22 @@ public:
 class Bicycle
 {
 private:
-    std::vector<sf::Vertex> DrawAbleCycle1;
+    ::std::vector<::std::vector<sf::Vertex>> vvDrawAbleCycle;
+    ::std::vector<sf::Texture> vTx; 
     bool is_Inited;
     unsigned short U;
 
 public:
-    ::std::vector<CyclePoint> vCycle;
+    ::std::vector<::std::vector<CyclePoint>> vvCycle;
 
     Bicycle();    
     ~Bicycle();
 
-    bool initCycle(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color defaultColor/*, ::std::map<size_t, CyclePoint> specDefs = {}*/);
-    bool drawBicycle(sf::RenderWindow& RenderWindow);
+    sf::Texture* addTx(const char* Filename);
+    bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color defaultColor,
+        float TextureX0 = 0.f, float TextureY0 = 0.f);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, sf::Texture* DrawTexture = nullptr, int CheckDrawOpt = 0x0);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, sf::Texture* DrawTexture = nullptr, int CheckDrawOpt = 0x0);
     bool mA();
 
     void setSpeed(decltype(U) Speed);
