@@ -17,7 +17,7 @@
 
 #define COUNTCYCLES 30
 #define DEFRADIUSBICYCLE 150.f
-#define DELT_MINUSRADIUS -1.f
+#define DELT_RADIUS -1.f
 #define X0BICYCLES 450.f
 #define Y0BICYCLES 200.f
 #define K_BICYCLE 90
@@ -166,42 +166,10 @@ void mainA(
 	
 	win.setActive(true);
 
-	bmdx::Bicycle Bicycle1;
-	Bicycle1.vvCycle.reserve(COUNTCYCLES);
-	for(size_t i = 0ul; i < COUNTCYCLES; ++i)
-	{
-		ER_IFN(Bicycle1.initCycle2Back(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
-			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(255, 255, 255, 255), X0BICYCLES, Y0BICYCLES),, )
-	}
-	sf::Texture* pTx = Bicycle1.addTx(file_image_1);
-	
-	for(size_t i = 0ul; i < Bicycle1.vvCycle.size(); ++i)
-	{
-		if (i == 0ul)
-		{
-			auto pFirst = &Bicycle1.vvCycle[i].front();
-			ER_IF(pFirst == nullptr,, )
-			auto pCur = Bicycle1.vvCycle[i].front().next;
-			ER_IF(pCur == nullptr,, )
-			int fFill = static_cast<unsigned int>(K_BICYCLE * 4 - 2);
-			pFirst->setColor(sf::Color(255, 255, 255, 255));
-			pFirst->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
-			pCur->setColor(sf::Color(255, 255, 255, 255));
-			pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
-			while(pCur != pFirst)
-			{
-				pCur = pCur->next;
-				ER_IF(pCur == nullptr,, )
-				//fFill = nndx::randB(hProv) % 100;
-				if ((fFill >= 0) && (fFill % K_BICYCLE >= K_BICYCLE - 10))
-				{
-					pCur->setColor(sf::Color(255, 255, 255, 255));
-					pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
-				}
-				--fFill;
-			}
-		}
-	}
+	bmdx::CycleMachine testMachine(COUNTCYCLES, DEFRADIUSBICYCLE, DELT_RADIUS, X0BICYCLES, Y0BICYCLES, K_BICYCLE,
+		sf::Color(0, 0, 0, 255), X0BICYCLES, Y0BICYCLES);
+	testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE * 4, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::QUADS);
+	testMachine.addTexture(file_image_1); // нужно как-то с ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
 	
 	//sf::Vector2i mouse_pos;
 	
@@ -213,30 +181,22 @@ void mainA(
 	{
 		startTime = __CLOCK_T::now();
 
-		for(size_t i = 1ull; i < Bicycle1.vvCycle.size(); ++i)
-		{
-			for(size_t j = 0ul; j < Bicycle1.vvCycle[i].size(); ++j)
-			{
-				Bicycle1.vvCycle[i][j].setColor(Bicycle1.vvCycle[0][j].getColor());
-				Bicycle1.vvCycle[i][j].setOptions(Bicycle1.vvCycle[0][j].getOptions());
-			}
-		}
+		testMachine.DefaultCopyBetweenCycles(0, 1, testMachine.getCycleSize() - 1);
 
 		{
 			using namespace ::std::chrono;
 			typedef microseconds TIME_T;
-			auto SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 10600);
+			unsigned short SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 10600);
 			//::std::cout << SpeedX << ::std::endl;
-			if (__NativeSpeed.load())	Bicycle1.setSpeed(SpeedmA.load());
-			else	Bicycle1.setSpeed(SpeedX);
-			Bicycle1.mA();
+			testMachine.mA(SpeedmA.load(), SpeedX, __NativeSpeed.load());
 		}
 
 		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
 
 		win.clear(/*sf::Color::White*/);
 		win.setView(view);
-		Bicycle1.drawBicycle(win, [](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, pTx);
+		testMachine.drawCycles(win,
+			[](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, 1);
 		//win.draw();
 		win.display();
 	}

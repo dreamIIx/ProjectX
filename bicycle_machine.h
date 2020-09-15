@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <atomic>
 #include <map>
 #include <cmath>
 
@@ -98,20 +99,24 @@ public:
 
     enum OPTIONS : int
     {
-        DRAW = 5
+        DRAWVAL = 0,
+        DRAW = 5,
+        KEYVAL = 8,
+        KEY = 13
     };
 
     CyclePoint(sf::Vertex* rfPoint, int opt, CyclePoint* prev, CyclePoint* next);
     ~CyclePoint();
 
     sf::Color getColor();
-    void setColor(sf::Color Color);
+    void setColor(const sf::Color& Color);
     void setOptions(decltype(options) options);
     decltype(options) getOptions();
 };
 
 class Bicycle
 {
+    friend class CycleMachine;
 private:
     ::std::vector<::std::vector<sf::Vertex>> vvDrawAbleCycle;
     ::std::vector<sf::Texture> vTx; 
@@ -125,7 +130,9 @@ public:
     ~Bicycle();
 
     sf::Texture* addTx(const char* Filename);
-    bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color defaultColor,
+    bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color&& defaultColor,
+        float TextureX0 = 0.f, float TextureY0 = 0.f);
+    bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, const sf::Color& defaultColor,
         float TextureX0 = 0.f, float TextureY0 = 0.f);
     bool drawBicycle(sf::RenderWindow& RenderWindow, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
     bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
@@ -134,6 +141,54 @@ public:
     void setSpeed(decltype(U) Speed);
     decltype(U) getSpeed();
     bool getState();
+};
+
+class CycleMachine
+{
+private:
+	bmdx::Bicycle mainBicycle;
+    ::std::vector<sf::Texture*> vpTx;
+
+public:
+    enum GenerateStates : int
+    {
+        SOLO = 0b0000,
+        //SOLO_DRAWNUM = 0b0001, // reserved
+        HALFS = 0b0010,
+        //HALFS_DRAWNUM = 0b0011, // reserved
+        TRIANGLE = 0b0011,
+        //TRIANGLE_DRAWNUM = 0b0101, // reserved
+        QUADS = 0b0100,
+        //QUADS_DRAWNUM = 0b1001 // reserved
+        RANDOM = 0001'0000,
+        //RANDOM_DRAWNUM = 0001'0001 // reserved
+    };
+
+    CycleMachine(size_t countCycle, float Radius, float DeltRadius, float BicycleX0, float BicycleY0, size_t kf, sf::Color&& Color,
+        float TextureX0 = 0.f, float TextureY0 = 0.f);
+    CycleMachine(size_t countCycle, float Radius, float DeltRadius, float BicycleX0, float BicycleY0, size_t kf, const sf::Color& Color,
+        float TextureX0 = 0.f, float TextureY0 = 0.f);
+    ~CycleMachine();
+
+    bool addTexture(const char* Filename);
+    ///
+    // for GenerateStates::RANDOM the ColorPointCount meaning the high bound of points count to fill color for,
+    // but actually it is a random count ((ColorPointCount / KF_AllCyclePoints)% of KF_AllCyclePoints)
+    ///
+    bool AddColor2CyclePart(size_t idx1, size_t idx2, size_t KF_AllCyclePoints, size_t ColorPointCount, const sf::Color& Color, GenerateStates States = GenerateStates::SOLO,
+        dxCRYPT* hProv = nullptr);
+    bool AddColor2CyclePart(size_t idx1, size_t idx2, size_t KF_AllCyclePoints, size_t ColorPointCount, const sf::Color& ColorStart, const sf::Color& ColorEnd,
+        GenerateStates States = GenerateStates::SOLO, dxCRYPT* hProv = nullptr);
+    bool SetColor2CyclePart(size_t idx1, size_t idx2, size_t KF_AllCyclePoints, size_t ColorPointCount, const sf::Color& Color, const sf::Color& ClearColor,
+        GenerateStates States = GenerateStates::SOLO, dxCRYPT* hProv = nullptr);
+    bool SetColor2CyclePart(size_t idx1, size_t idx2, size_t KF_AllCyclePoints, size_t ColorPointCount, const sf::Color& ColorStart, const sf::Color& ColorEnd,
+        const sf::Color& ClearColor, GenerateStates States = GenerateStates::SOLO, dxCRYPT* hProv = nullptr);
+    bool SetBitCyclePoint();
+    bool DefaultCopyBetweenCycles(size_t ResourceIdx, size_t TargetIdx1, size_t TargetIdx2);
+    bool mA(unsigned short nativeSpeedOfCycles, unsigned short dependedSpeedOfCycles, bool SpeedState);
+    bool drawCycles(sf::RenderWindow& RenderWindow, bool SelectionFunction(bmdx::CyclePoint*), size_t textureIdx = 0ul);
+
+    size_t getCycleSize();
 };
 
 }
