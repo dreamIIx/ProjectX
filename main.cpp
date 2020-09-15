@@ -15,7 +15,7 @@
 #endif
 #endif
 
-#define COUNTCYCLES 150
+#define COUNTCYCLES 30
 #define DEFRADIUSBICYCLE 150.f
 #define DELT_MINUSRADIUS -1.f
 #define X0BICYCLES 450.f
@@ -106,14 +106,20 @@ int main(int argc, char** argv)
 			{
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 				{
-					auto x = speedmA.load();
-					if (x > 5)	speedmA.store(x - 5);
-					else if (x > 2)	speedmA.store(x - 1);
+					auto x = speedmA.load(::std::memory_order_acquire);
+					if (x > 1)
+					{
+						speedmA.store(x - 1);
+						::std::cout << "ITERCOUNT - " << x - 1 << ::std::endl;
+						::std::cout << "U - " << ((x - 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
+					}
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 				{
-					auto x = speedmA.load();
-					speedmA.store(x + 15);
+					auto x = speedmA.load(::std::memory_order_acquire);
+					speedmA.store(x + 1);
+					::std::cout << "ITERCOUNT - " << x + 1 << ::std::endl;
+					::std::cout << "U - " << ((x + 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 				{
@@ -165,7 +171,7 @@ void mainA(
 	for(size_t i = 0ul; i < COUNTCYCLES; ++i)
 	{
 		ER_IFN(Bicycle1.initCycle2Back(DEFRADIUSBICYCLE + DELT_MINUSRADIUS * i,
-			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(0, 0, 0, 0), X0BICYCLES, Y0BICYCLES),, )
+			X0BICYCLES, Y0BICYCLES, K_BICYCLE, sf::Color(255, 255, 255, 255), X0BICYCLES, Y0BICYCLES),, )
 	}
 	sf::Texture* pTx = Bicycle1.addTx(file_image_1);
 	
@@ -177,7 +183,7 @@ void mainA(
 			ER_IF(pFirst == nullptr,, )
 			auto pCur = Bicycle1.vvCycle[i].front().next;
 			ER_IF(pCur == nullptr,, )
-			int fFill = static_cast<unsigned int>(38ul/*K_BICYCLE * 0.5 - 2*/);
+			int fFill = static_cast<unsigned int>(K_BICYCLE * 4 - 2);
 			pFirst->setColor(sf::Color(255, 255, 255, 255));
 			pFirst->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
 			pCur->setColor(sf::Color(255, 255, 255, 255));
@@ -187,7 +193,7 @@ void mainA(
 				pCur = pCur->next;
 				ER_IF(pCur == nullptr,, )
 				//fFill = nndx::randB(hProv) % 100;
-				if ((fFill >= 0) && (fFill % 40 >= 34))
+				if ((fFill >= 0) && (fFill % K_BICYCLE >= K_BICYCLE - 10))
 				{
 					pCur->setColor(sf::Color(255, 255, 255, 255));
 					pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, 0x0));
