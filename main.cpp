@@ -20,7 +20,7 @@
 #define DELT_RADIUS -1.f
 #define X0BICYCLES 450.f
 #define Y0BICYCLES 200.f
-#define K_BICYCLE 90
+#define K_BICYCLE 45
 
 constexpr unsigned int def_WIN_X = 900;
 constexpr unsigned int def_WIN_Y = 400;
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 					{
 						speedmA.store(x - 1);
 						::std::cout << "ITERCOUNT - " << x - 1 << ::std::endl;
-						::std::cout << "U - " << ((x - 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
+						//::std::cout << "U - " << ((x - 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
 					}
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
 					auto x = speedmA.load(::std::memory_order_acquire);
 					speedmA.store(x + 1);
 					::std::cout << "ITERCOUNT - " << x + 1 << ::std::endl;
-					::std::cout << "U - " << ((x + 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
+					//::std::cout << "U - " << ((x + 1) * 2 * M_PI * DEFRADIUSBICYCLE) / 4 * K_BICYCLE << ::std::endl;
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 				{
@@ -168,8 +168,8 @@ void mainA(
 
 	bmdx::CycleMachine testMachine(COUNTCYCLES, DEFRADIUSBICYCLE, DELT_RADIUS, X0BICYCLES, Y0BICYCLES, K_BICYCLE,
 		sf::Color(0, 0, 0, 255), X0BICYCLES, Y0BICYCLES);
-	testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE * 4, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::QUADS);
-	testMachine.addTexture(file_image_1); // нужно как-то с ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
+	ER_IFN(testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::TRIANGLE),, )
+	ER_IFN(testMachine.addTexture(file_image_1),, ) // нужно как-то с ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
 	
 	//sf::Vector2i mouse_pos;
 	
@@ -181,22 +181,22 @@ void mainA(
 	{
 		startTime = __CLOCK_T::now();
 
-		testMachine.DefaultCopyBetweenCycles(0, 1, testMachine.getCycleSize() - 1);
+		ER_IFN(testMachine.DefaultCopyBetweenCycles(0, 1, testMachine.getCycleSize() - 1),, )
 
 		{
 			using namespace ::std::chrono;
 			typedef microseconds TIME_T;
-			unsigned short SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 10600);
+			unsigned short SpeedX = static_cast<unsigned short>(SpeedmA.load() * duration_cast<TIME_T>(__CLOCK_T::now() - startTime).count() / 225);
 			//::std::cout << SpeedX << ::std::endl;
-			testMachine.mA(SpeedmA.load(), SpeedX, __NativeSpeed.load());
+			ER_IFN(testMachine.mA(SpeedmA.load(), SpeedX, __NativeSpeed.load()),, )
 		}
 
 		view.setCenter(static_cast<float>(win.getSize().x / 2), static_cast<float>(win.getSize().y / 2));
 
 		win.clear(/*sf::Color::White*/);
 		win.setView(view);
-		testMachine.drawCycles(win,
-			[](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, 1);
+		ER_IFN(testMachine.drawCycles(win,
+			[](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, 1),, )
 		//win.draw();
 		win.display();
 	}

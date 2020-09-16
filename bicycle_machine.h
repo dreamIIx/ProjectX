@@ -71,6 +71,8 @@
 #define SETBITS(x,y,pos)        ( (x) | ( y << (pos) ) )
 #define UNSETBITS(x,y,pos)      ( (x) & (~( y << (pos) ) ) )
 
+#define KF_MULT 4
+
 namespace nndx
 {
 	dxFastInt32 randT(dxCRYPT&);
@@ -119,12 +121,19 @@ class Bicycle
     friend class CycleMachine;
 private:
     ::std::vector<::std::vector<sf::Vertex>> vvDrawAbleCycle;
-    ::std::vector<sf::Texture> vTx; 
+    ::std::vector<sf::Texture> vTx;
     bool is_Inited;
     unsigned short U;
 
 public:
-    ::std::vector<::std::vector<CyclePoint>> vvCycle;
+    struct VectorCycle
+    {
+        ::std::vector<CyclePoint> data;
+        size_t KF_Cycle;
+
+        VectorCycle();
+    };
+    ::std::vector<VectorCycle> vvCycle;
 
     Bicycle();    
     ~Bicycle();

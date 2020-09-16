@@ -142,16 +142,24 @@ Bicycle::~Bicycle()
     
 }
 
+Bicycle::VectorCycle::VectorCycle() : data(::std::vector<CyclePoint>())
+{
+
+}
+
 sf::Texture* Bicycle::addTx(const char* file)
 {
     ER_IF(file == nullptr,, return nullptr; )
     ER_IF(file == "",, return nullptr; )
 
     sf::Image temp;
-    temp.loadFromFile(file);
-    vTx.reserve(vTx.capacity() + 1);
-    vTx.emplace_back(sf::Texture());
-    vTx.back().loadFromImage(temp);
+    if (temp.loadFromFile(file))
+    {
+        
+        vTx.reserve(vTx.capacity() + 1);
+        vTx.emplace_back(sf::Texture());
+        vTx.back().loadFromImage(temp);
+    }
 
     return &vTx.back();
 }
@@ -169,28 +177,29 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color&& 
     vvCycle.reserve(vvCycle.capacity() + 1);
     vvDrawAbleCycle.reserve(vvDrawAbleCycle.capacity() + 1);
     vvDrawAbleCycle.emplace_back(::std::vector<sf::Vertex>());
-    vvCycle.emplace_back(::std::vector<CyclePoint>());
-    vvCycle.back().reserve(4 * K);
-    vvDrawAbleCycle.back().reserve(4 * K);
+    vvCycle.emplace_back(VectorCycle());
+    vvCycle.back().data.reserve(KF_MULT * K);
+    vvCycle.back().KF_Cycle = K;
+    vvDrawAbleCycle.back().reserve(KF_MULT * K);
     
     coord x = startX + x0;
     coord y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
     vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), ::std::forward<decltype(defColor)>(defColor), sf::Vector2f(startX + txx0, y - y0 + txy0)));
-    vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, nullptr, nullptr));
-    pPrev = &vvCycle.back().back();
+    vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, nullptr, nullptr));
+    pPrev = &vvCycle.back().data.back();
     x -= incXY;
     for(size_t i = 1ull; i < K; ++i)
     {
         y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), ::std::forward<decltype(defColor)>(defColor), sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         x -= incXY;
     }
 
-    ER_IF(vvCycle.back().size() != K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -201,14 +210,14 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color&& 
     {
         x = -sqrt(SqrR - pow(y - y0, 2.)) + x0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), ::std::forward<decltype(defColor)>(defColor), sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         y += incXY;
     }
 
-    ER_IF(vvCycle.back().size() != 2 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != 2 * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != 2 * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -219,14 +228,14 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color&& 
     {
         y = sqrt(SqrR - pow(x - x0, 2.)) + y0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), ::std::forward<decltype(defColor)>(defColor), sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         x += incXY;
     }
 
-    ER_IF(vvCycle.back().size() != 3 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != 3 * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != 3 * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -237,18 +246,18 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color&& 
     {
         x = sqrt(SqrR - pow(y - y0, 2.)) + x0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), ::std::forward<decltype(defColor)>(defColor), sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         y -= incXY;
     }
-    pPrev->next = &vvCycle.back().front();
-    vvCycle.back().front().prev = pPrev;
+    pPrev->next = &vvCycle.back().data.front();
+    vvCycle.back().data.front().prev = pPrev;
 
-    ER_IF(vvCycle.back().size() != 4 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != KF_MULT * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
-    ER_IF(vvDrawAbleCycle.back().size() != 4 * K,
+    ER_IF(vvDrawAbleCycle.back().size() != KF_MULT * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
         return false; )
 
@@ -269,28 +278,29 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     vvCycle.reserve(vvCycle.capacity() + 1);
     vvDrawAbleCycle.reserve(vvDrawAbleCycle.capacity() + 1);
     vvDrawAbleCycle.emplace_back(::std::vector<sf::Vertex>());
-    vvCycle.emplace_back(::std::vector<CyclePoint>());
-    vvCycle.back().reserve(4 * K);
-    vvDrawAbleCycle.back().reserve(4 * K);
+    vvCycle.emplace_back(VectorCycle());
+    vvCycle.back().data.reserve(KF_MULT * K);
+    vvCycle.back().KF_Cycle = K;
+    vvDrawAbleCycle.back().reserve(KF_MULT * K);
     
     coord x = startX + x0;
     coord y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
     vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor, sf::Vector2f(startX + txx0, y - y0 + txy0)));
-    vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, nullptr, nullptr));
-    pPrev = &vvCycle.back().back();
+    vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, nullptr, nullptr));
+    pPrev = &vvCycle.back().data.back();
     x -= incXY;
     for(size_t i = 1ull; i < K; ++i)
     {
         y = -sqrt(SqrR - pow(x - x0, 2.)) + y0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor, sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         x -= incXY;
     }
 
-    ER_IF(vvCycle.back().size() != K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -301,14 +311,14 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     {
         x = -sqrt(SqrR - pow(y - y0, 2.)) + x0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor, sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         y += incXY;
     }
 
-    ER_IF(vvCycle.back().size() != 2 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != 2 * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != 2 * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -319,14 +329,14 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     {
         y = sqrt(SqrR - pow(x - x0, 2.)) + y0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor, sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         x += incXY;
     }
 
-    ER_IF(vvCycle.back().size() != 3 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != 3 * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
     ER_IF(vvDrawAbleCycle.back().size() != 3 * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
@@ -337,18 +347,18 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     {
         x = sqrt(SqrR - pow(y - y0, 2.)) + x0;
         vvDrawAbleCycle.back().emplace_back(sf::Vertex(sf::Vector2f(x, y), defColor, sf::Vector2f(x - x0 + txx0, y - y0 + txy0)));
-        vvCycle.back().emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
-        pPrev->next = &vvCycle.back().back();
-        pPrev = &vvCycle.back().back();
+        vvCycle.back().data.emplace_back(CyclePoint(&vvDrawAbleCycle.back().back(), 0x0, pPrev, nullptr));
+        pPrev->next = &vvCycle.back().data.back();
+        pPrev = &vvCycle.back().data.back();
         y -= incXY;
     }
-    pPrev->next = &vvCycle.back().front();
-    vvCycle.back().front().prev = pPrev;
+    pPrev->next = &vvCycle.back().data.front();
+    vvCycle.back().data.front().prev = pPrev;
 
-    ER_IF(vvCycle.back().size() != 4 * K,
-        ::std::cout << "vvCycle.back().size() - " << vvCycle.back().size() << ::std::endl;,
+    ER_IF(vvCycle.back().data.size() != KF_MULT * K,
+        ::std::cout << "vvCycle.back().data.size() - " << vvCycle.back().data.size() << ::std::endl;,
         return false; )
-    ER_IF(vvDrawAbleCycle.back().size() != 4 * K,
+    ER_IF(vvDrawAbleCycle.back().size() != KF_MULT * K,
         ::std::cout << "vvDrawAbleCycle.back().size() - " << vvDrawAbleCycle.back().size() << ::std::endl;,
         return false; )
 
@@ -369,9 +379,9 @@ bool Bicycle::drawBicycle(sf::RenderWindow& win, bool func(bmdx::CyclePoint*), s
 */
     for(size_t i = 0ull; i < vvCycle.size(); ++i)
     {
-        for(size_t j = 0ull; j < vvCycle[i].size(); ++j)
+        for(size_t j = 0ull; j < vvCycle[i].data.size(); ++j)
         {
-            auto x = vvCycle[i][j];
+            auto x = vvCycle[i].data[j];
             if (func(&x)) win.draw(x.pPoint, 1, sf::Points, tx);
         }
     }
@@ -395,9 +405,9 @@ bool Bicycle::drawBicycle(sf::RenderWindow& win, size_t idx1, size_t idx2, bool 
 */
     for(size_t i = idx1; i < idx2; ++i)
     {
-        for(size_t j = 0ull; j < vvCycle[i].size(); ++j)
+        for(size_t j = 0ull; j < vvCycle[i].data.size(); ++j)
         {
-            auto x = vvCycle[i][j];
+            auto x = vvCycle[i].data[j];
             if (func(&x)) win.draw(x.pPoint, 1, sf::Points, tx);
         }
     }
@@ -411,10 +421,12 @@ bool Bicycle::mA()
 
     for(size_t j = 0ull; j < vvCycle.size(); ++j)
     {
-        for(decltype(Bicycle::U) i = 0; i < U; ++i)
+        auto IterCount = U % (vvCycle[j].KF_Cycle * KF_MULT);
+        //::std::cout << IterCount << ::std::endl;
+        for(decltype(Bicycle::U) i = 0; i < IterCount; ++i)
         {
-            auto pFirst = &vvCycle[j].front();
-            auto pCur = vvCycle[j].front().next;
+            auto pFirst = &vvCycle[j].data.front();
+            auto pCur = vvCycle[j].data.front().next;
             auto FirstColor = pFirst->getColor();
             auto FirstOpt = pFirst->getOptions();
             pFirst->setColor(pCur->getColor()); // <<<<<-------  THIS
@@ -437,6 +449,7 @@ bool Bicycle::mA()
 void Bicycle::setSpeed(decltype(Bicycle::U) aSpeed)
 {
     this->U = aSpeed;
+    //::std::cout << "Bicycle::U - " << this->U << ::std::endl;
 }
 
 decltype(Bicycle::U) Bicycle::getSpeed()
@@ -514,7 +527,7 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
     ER_IF(idx1 >= idx2, ::std::cout << "idx1 >= idx2" << ::std::endl;, return false; )
     ER_IF(kfCycle <= 0, ::std::cout << "kfCycle <= 0" << ::std::endl;, return false; )
     ER_IF(clrCount <= 0, ::std::cout << "clrCount <= 0" << ::std::endl;, return false; )
-    ER_IF(kfCycle < clrCount, ::std::cout << "kfCycle < clrCount" << ::std::endl;, return false; )
+    ER_IF(kfCycle * KF_MULT < clrCount, ::std::cout << "kfCycle < clrCount" << ::std::endl;, return false; )
 
 	for(size_t idx = idx1; idx < idx2; ++idx)
 	{
@@ -522,7 +535,7 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
 		{
             if (states == GenerateStates::SOLO)
             {
-                auto pCur = &mainBicycle.vvCycle[idx].front();
+                auto pCur = &mainBicycle.vvCycle[idx].data.front();
                 ER_IF(pCur == nullptr,, )
                 for(size_t i = 0ul; i < clrCount; ++i)
                 {
@@ -536,17 +549,18 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
             {
                 ER_IF(hProv == nullptr, ::std::cout << "hProv == nullptr" << ::std::endl;, return false; )
 
-                auto pCur = &mainBicycle.vvCycle[idx].front();
+                auto pCur = &mainBicycle.vvCycle[idx].data.front();
                 ER_IF(pCur == nullptr,, )
                 auto pFirst = pCur;
 
                 size_t countFilled = 0ul;
+                auto Xcondition = kfCycle * KF_MULT / clrCount;
                 while(pCur != pFirst)
                 {
                     ER_IF(pCur == nullptr,, )
                     if (countFilled < clrCount)
                     {
-                        if (nndx::randB(*hProv) % (kfCycle / clrCount))
+                        if (nndx::randB(*hProv) % Xcondition)
                         {
                             pCur->setColor(clr);
                             pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, bmdx::CyclePoint::OPTIONS::DRAWVAL));
@@ -563,17 +577,18 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
             }
             else
             {
-                auto pCur = &mainBicycle.vvCycle[idx].front();
+                auto pCur = &mainBicycle.vvCycle[idx].data.front();
                 ER_IF(pCur == nullptr,, )
                 auto pFirst = pCur;
 
-                int fFill = static_cast<unsigned int>(kfCycle);
+                int fFill = static_cast<unsigned int>(kfCycle * KF_MULT);
+                auto Xcondition = fFill / states;
                 do
                 {
                     ER_IF(pCur == nullptr,, )
                     if (fFill > 0)
                     {
-                        if ((fFill % (kfCycle / states)) > (kfCycle / states) - clrCount)
+                        if ((fFill % Xcondition) > (Xcondition - clrCount))
                         {
                             pCur->setColor(clr);
                             pCur->setOptions(SETBITS(SETBITS(0x0, 0x1, bmdx::CyclePoint::OPTIONS::DRAW), 0x1, bmdx::CyclePoint::OPTIONS::DRAWVAL));
@@ -605,10 +620,10 @@ bool CycleMachine::DefaultCopyBetweenCycles(size_t rdx, size_t tdx1, size_t tdx2
     {
         if (i != rdx)
         {
-            for(size_t j = 0ul; j < mainBicycle.vvCycle[i].size(); ++j)
+            for(size_t j = 0ul; j < mainBicycle.vvCycle[i].data.size(); ++j)
             {
-                mainBicycle.vvCycle[i][j].setColor(mainBicycle.vvCycle[rdx][j].getColor());
-                mainBicycle.vvCycle[i][j].setOptions(mainBicycle.vvCycle[rdx][j].getOptions());
+                mainBicycle.vvCycle[i].data[j].setColor(mainBicycle.vvCycle[rdx].data[j].getColor());
+                mainBicycle.vvCycle[i].data[j].setOptions(mainBicycle.vvCycle[rdx].data[j].getOptions());
             }
         }
     }
@@ -618,9 +633,34 @@ bool CycleMachine::DefaultCopyBetweenCycles(size_t rdx, size_t tdx1, size_t tdx2
 
 bool CycleMachine::mA(unsigned short speed, unsigned short dependedSpeedOfCycles, bool nativeSpeed)
 {
+    ER_IFN(mainBicycle.is_Inited, ::std::cout << "mainBicycle.is_Inited - " << mainBicycle.is_Inited << ::std::endl;, return false; )
+
     if (nativeSpeed)    mainBicycle.setSpeed(speed);
     else    mainBicycle.setSpeed(dependedSpeedOfCycles);
-    ER_IFN(mainBicycle.mA(),, return false; )
+
+    for(size_t j = 0ull; j < mainBicycle.vvCycle.size(); ++j)
+    {
+        auto IterCount = mainBicycle.U % (mainBicycle.vvCycle[j].KF_Cycle * KF_MULT);
+        //::std::cout << IterCount << ::std::endl;
+        for(decltype(Bicycle::U) i = 0; i < IterCount; ++i)
+        {
+            auto pFirst = &mainBicycle.vvCycle[j].data.front();
+            auto pCur = mainBicycle.vvCycle[j].data.front().next;
+            auto FirstColor = pFirst->getColor();
+            auto FirstOpt = pFirst->getOptions();
+            pFirst->setColor(pCur->getColor()); // <<<<<-------  THIS
+            pFirst->setOptions(pCur->getOptions());
+            while(pCur != pFirst->prev)
+            {
+                pCur = pCur->next;
+                pCur->prev->setColor(pCur->getColor());
+                pCur->prev->setOptions(pCur->getOptions());
+            }
+            pCur->setColor(FirstColor);
+            pCur->setOptions(FirstOpt);
+
+        }
+    }
 
     return true;
 }
