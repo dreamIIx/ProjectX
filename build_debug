@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "compiling main2.cpp..."
 g++ -c main.cpp bicycle_machine.cpp -fpermissive
+# -fpermissive
 echo "linking all..."
 g++ -o ProjectX main.o bicycle_machine.o -Wall -g -DSFML_STATIC -pthread -lsfml-system -lsfml-window -lsfml-graphics -lX11 -std=c++17
 #echo "start ProjectX..."

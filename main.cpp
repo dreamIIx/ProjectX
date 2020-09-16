@@ -168,7 +168,7 @@ void mainA(
 
 	bmdx::CycleMachine testMachine(COUNTCYCLES, DEFRADIUSBICYCLE, DELT_RADIUS, X0BICYCLES, Y0BICYCLES, K_BICYCLE,
 		sf::Color(0, 0, 0, 255), X0BICYCLES, Y0BICYCLES);
-	ER_IFN(testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::TRIANGLE),, )
+	ER_IFN(testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::HALFS),, )
 	ER_IFN(testMachine.addTexture(file_image_1),, ) // нужно как-то с ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
 	
 	//sf::Vector2i mouse_pos;

@@ -169,7 +169,7 @@ public:
         //TRIANGLE_DRAWNUM = 0b0101, // reserved
         QUADS = 0b0100,
         //QUADS_DRAWNUM = 0b1001 // reserved
-        RANDOM = 0001'0000,
+        //RANDOM = 0001'0000, // don't work
         //RANDOM_DRAWNUM = 0001'0001 // reserved
     };
 

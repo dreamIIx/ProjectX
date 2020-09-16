@@ -545,7 +545,7 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
                     pCur = pCur->next;
                 }
             }
-            else if (states == GenerateStates::RANDOM)
+            /*else if (states == GenerateStates::RANDOM)
             {
                 ER_IF(hProv == nullptr, ::std::cout << "hProv == nullptr" << ::std::endl;, return false; )
 
@@ -574,7 +574,7 @@ bool CycleMachine::AddColor2CyclePart(size_t idx1, size_t idx2, size_t kfCycle, 
                     }
                     
                 }
-            }
+            }*/
             else
             {
                 auto pCur = &mainBicycle.vvCycle[idx].data.front();
