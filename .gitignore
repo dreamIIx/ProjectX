@@ -2,6 +2,7 @@
 /testzone2
 /tx
 /.vscode
+/files
 hero.cpp
 hero.h
 *.o

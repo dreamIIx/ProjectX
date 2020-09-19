@@ -25,10 +25,10 @@
 #define ERROR_				::std::cout << (const char*)defDX__FILELINE << ::std::endl; \
                             throw ::std::exception(); // ((const char*)defDX_S_(__LINE__))
 #else
-#error This UNIX operating system is not supported by dx::NN
+#error This UNIX operating system is not supported by bmdx::
 #endif
 #else
-#error This operating system is not supported by dx::NN
+#error This operating system is not supported by bmdx::
 #endif
 
 #endif
@@ -53,10 +53,10 @@
 		typedef uint_fast32_t dxFastInt32;
 		#define	def_FILEROOT "/run/media/dream11x/dreamIIx/programming/C++/Project2/x64/Debug/"
     #else
-        #error This UNIX operating system is not supported by dx::NN
+        #error This UNIX operating system is not supported by bmdx::
     #endif
 #else
-    #error This operating system is not supported by dx::NN
+    #error This operating system is not supported by bmdx::
 #endif
 
 #define ISBIT(x,pos)            ( ( (x) & ( 0x1 << (pos) ) ) != 0 )
@@ -122,6 +122,7 @@ class Bicycle
 private:
     ::std::vector<::std::vector<sf::Vertex>> vvDrawAbleCycle;
     ::std::vector<sf::Texture> vTx;
+    sf::Sprite backgroud;
     bool is_Inited;
     unsigned short U;
 
@@ -130,6 +131,9 @@ public:
     {
         ::std::vector<CyclePoint> data;
         size_t KF_Cycle;
+        float radius;
+        float centerX;
+        float centerY;
 
         VectorCycle();
     };
@@ -143,6 +147,7 @@ public:
         float TextureX0 = 0.f, float TextureY0 = 0.f);
     bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, const sf::Color& defaultColor,
         float TextureX0 = 0.f, float TextureY0 = 0.f);
+    bool initBackground(const char* Filename, VectorCycle& focusCycle);
     bool drawBicycle(sf::RenderWindow& RenderWindow, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
     bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
     bool mA();
@@ -155,10 +160,11 @@ public:
 class CycleMachine
 {
 private:
+
+public:
 	bmdx::Bicycle mainBicycle;
     ::std::vector<sf::Texture*> vpTx;
 
-public:
     enum GenerateStates : int
     {
         SOLO = 0b0000,

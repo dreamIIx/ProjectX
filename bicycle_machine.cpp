@@ -180,6 +180,9 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, sf::Color&& 
     vvCycle.emplace_back(VectorCycle());
     vvCycle.back().data.reserve(KF_MULT * K);
     vvCycle.back().KF_Cycle = K;
+    vvCycle.back().radius = r;
+    vvCycle.back().centerX = x0;
+    vvCycle.back().centerY = y0;
     vvDrawAbleCycle.back().reserve(KF_MULT * K);
     
     coord x = startX + x0;
@@ -281,6 +284,9 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     vvCycle.emplace_back(VectorCycle());
     vvCycle.back().data.reserve(KF_MULT * K);
     vvCycle.back().KF_Cycle = K;
+    vvCycle.back().radius = r;
+    vvCycle.back().centerX = x0;
+    vvCycle.back().centerY = y0;
     vvDrawAbleCycle.back().reserve(KF_MULT * K);
     
     coord x = startX + x0;
@@ -366,11 +372,28 @@ bool Bicycle::initCycle2Back(float r, float x0, float y0, size_t K, const sf::Co
     return true;
 }
 
+bool Bicycle::initBackground(const char* file, VectorCycle& cycle)
+{
+    sf::Texture* temp = addTx(file);
+    if (temp != nullptr)
+    {
+        backgroud.setTexture(*temp);
+        backgroud.setOrigin(sf::Vector2f(backgroud.getTexture()->getSize().x / 2, backgroud.getTexture()->getSize().y / 2));
+        backgroud.setPosition(cycle.centerX, cycle.centerY);
+    }
+    else
+    {
+        return false;
+    }
+    return true;
+}
+
 bool Bicycle::drawBicycle(sf::RenderWindow& win, bool func(bmdx::CyclePoint*), sf::Texture* tx = nullptr)
 {
     ER_IFN(win.isOpen(),, return false; )
     ER_IFN(is_Inited,, return false; )
 
+    win.draw(backgroud);
 /*
     for(size_t i = 0ull; i < vvDrawAbleCycle.size(); ++i)
     {
@@ -397,6 +420,7 @@ bool Bicycle::drawBicycle(sf::RenderWindow& win, size_t idx1, size_t idx2, bool 
     ER_IF(idx2 >= vvCycle.size() || idx2 < 0, ::std::cout << "idx2 >= vvCycle().size() || idx2 < 0" << ::std::endl;, return false; )
     ER_IF(idx1 >= idx2, ::std::cout << "idx1 >= idx2," << ::std::endl;, return false; )
 
+    win.draw(backgroud);
 /*
     for(size_t i = 0ull; i < vvDrawAbleCycle.size(); ++i)
     {
@@ -478,6 +502,7 @@ CycleMachine::CycleMachine(size_t countCycle, float r, float deltr, float x0, fl
     ER_IF(vpTx.capacity() != 1, ::std::cout << "vpTx.capacity() != 1" << ::std::endl;, )
     ER_IF(vpTx.size() != 1, ::std::cout << "vpTx.size() != 1" << ::std::endl;, )
     ER_IF(vpTx.back() != nullptr, ::std::cout << "vpTx.size(vpTx.back() != nullptr) != 1" << ::std::endl;, )
+
 }
 
 CycleMachine::CycleMachine(size_t countCycle, float r, float deltr, float x0, float y0, size_t kf, const sf::Color& clr, float tx0 = 0.f, float ty0 = 0.f)
@@ -490,12 +515,13 @@ CycleMachine::CycleMachine(size_t countCycle, float r, float deltr, float x0, fl
 		ER_IFN(mainBicycle.initCycle2Back(r + deltr * i,
 			x0, y0, kf, clr, tx0, ty0),, )
 	}
-    
+
     vpTx.reserve(vpTx.capacity() + 1);
     vpTx.emplace_back(nullptr);
     ER_IF(vpTx.capacity() != 1, ::std::cout << "vpTx.capacity() != 1" << ::std::endl;, )
     ER_IF(vpTx.size() != 1, ::std::cout << "vpTx.size() != 1" << ::std::endl;, )
     ER_IF(vpTx.back() != nullptr, ::std::cout << "vpTx.size(vpTx.back() != nullptr) != 1" << ::std::endl;, )
+
 }
 
 CycleMachine::~CycleMachine()
@@ -667,7 +693,7 @@ bool CycleMachine::mA(unsigned short speed, unsigned short dependedSpeedOfCycles
 
 bool CycleMachine::drawCycles(sf::RenderWindow& win, bool func(bmdx::CyclePoint*), size_t textureIdx)
 {
-    ER_IFN(mainBicycle.drawBicycle(win, func, vpTx[textureIdx]),, return false; )
+    ER_IFN(mainBicycle.drawBicycle(win, func, vpTx.at(textureIdx)),, return false; )
 
     return true;
 }
