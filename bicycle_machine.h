@@ -122,9 +122,13 @@ class Bicycle
 private:
     ::std::vector<::std::vector<sf::Vertex>> vvDrawAbleCycle;
     ::std::vector<sf::Texture> vTx;
-    sf::Sprite backgroud;
+    ::std::vector<sf::Sprite> vBackg;
+    sf::Texture* txBackg;
     bool is_Inited;
+    bool drawBack;
     unsigned short U;
+
+    sf::Texture* addTx(const char* Filename);
 
 public:
     struct VectorCycle
@@ -142,19 +146,21 @@ public:
     Bicycle();    
     ~Bicycle();
 
-    sf::Texture* addTx(const char* Filename);
     bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, sf::Color&& defaultColor,
         float TextureX0 = 0.f, float TextureY0 = 0.f);
     bool initCycle2Back(float CycleRadius, float x0, float y0, size_t halfCount, const sf::Color& defaultColor,
         float TextureX0 = 0.f, float TextureY0 = 0.f);
-    bool initBackground(const char* Filename, VectorCycle& focusCycle);
-    bool drawBicycle(sf::RenderWindow& RenderWindow, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
-    bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, bool func(bmdx::CyclePoint*), sf::Texture* DrawTexture = nullptr);
+    bool setBackground(const char* Filename, VectorCycle& focusCycle);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, bool SelectionFunction(bmdx::CyclePoint*), const sf::Texture* Texture = nullptr);
+    bool drawBicycle(sf::RenderWindow& RenderWindow, size_t StartIdx, size_t EndIdx, bool SelectionFunction(bmdx::CyclePoint*), const sf::Texture* Texture = nullptr);
     bool mA();
 
     void setSpeed(decltype(U) Speed);
+    void drawBackground(bool State);
     decltype(U) getSpeed();
     bool getState();
+    const sf::Texture* getTexture(size_t Index);
+    const sf::Texture* getBackgTexture();
 };
 
 class CycleMachine
@@ -163,7 +169,6 @@ private:
 
 public:
 	bmdx::Bicycle mainBicycle;
-    ::std::vector<sf::Texture*> vpTx;
 
     enum GenerateStates : int
     {
@@ -201,7 +206,7 @@ public:
     bool SetBitCyclePoint();
     bool DefaultCopyBetweenCycles(size_t ResourceIdx, size_t TargetIdx1, size_t TargetIdx2);
     bool mA(unsigned short nativeSpeedOfCycles, unsigned short dependedSpeedOfCycles, bool SpeedState);
-    bool drawCycles(sf::RenderWindow& RenderWindow, bool SelectionFunction(bmdx::CyclePoint*), size_t textureIdx = 0ul);
+    bool drawCycles(sf::RenderWindow& RenderWindow, bool SelectionFunction(bmdx::CyclePoint*), ptrdiff_t textureIdx = -1l);
 
     size_t getCycleSize();
 };

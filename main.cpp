@@ -15,9 +15,9 @@
 #endif
 #endif
 
-#define COUNTCYCLES 30
+#define COUNTCYCLES 15
 #define DEFRADIUSBICYCLE 150.f
-#define DELT_RADIUS -1.f
+#define DELT_RADIUS -2.f
 #define X0BICYCLES 450.f
 #define Y0BICYCLES 200.f
 #define K_BICYCLE 45
@@ -31,7 +31,9 @@ constexpr const char* file_image_1 = "files/image_1_750.jpg";
 #elif defined(__unix__)
     #if defined(__linux__)
 constexpr const char* file_image_1 = "./files/image_1_750.jpg";
+constexpr const char* file_image_2 = "./files/image_2_750.jpg";
 constexpr const char* file_background_1 = "./files/background_1_750.jpg";
+constexpr const char* file_background_2 = "./files/background_2_750.jpg";
     #else
         #error This UNIX operating system is not supported by dx::NN
     #endif
@@ -169,20 +171,10 @@ void mainA(
 
 	bmdx::CycleMachine testMachine(COUNTCYCLES, DEFRADIUSBICYCLE, DELT_RADIUS, X0BICYCLES, Y0BICYCLES, K_BICYCLE,
 		sf::Color(0, 0, 0, 255), X0BICYCLES, Y0BICYCLES);
-	ER_IFN(testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE, 15, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::QUADS),, )
-	ER_IFN(testMachine.addTexture(file_image_1),, ) // нужно как-то с ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
-	ER_IFN(testMachine.mainBicycle.initBackground(file_background_1, testMachine.mainBicycle.vvCycle.at(0)),, )
-
-/*
-	sf::Image im;
-	im.loadFromFile(file_background_1);
-	sf::Texture tx;
-	tx.loadFromImage(im);
-	sf::Sprite backg;
-	backg.setTexture(tx);
-	backg.setOrigin(sf::Vector2f(tx.getSize().x / 2, tx.getSize().y / 2));
-	backg.setPosition(testMachine.mainBicycle.vvCycle.at(0).centerX, testMachine.mainBicycle.vvCycle.at(0).centerY);
-*/
+	ER_IFN(testMachine.AddColor2CyclePart(0ul, 1ul, K_BICYCLE, 30, sf::Color(255, 255, 255, 255), bmdx::CycleMachine::GenerateStates::HALFS),, )
+	ER_IFN(testMachine.addTexture(file_image_2),, ) // нужно как-то ассоциировать с каким-то ключом (имя_файла, номер), сделать что-то вроде хеш-таблицы
+	ER_IFN(testMachine.mainBicycle.setBackground(file_background_2, testMachine.mainBicycle.vvCycle.at(0)),, )
+	testMachine.mainBicycle.drawBackground(true);
 
 	//sf::Vector2i mouse_pos;
 	
@@ -208,10 +200,8 @@ void mainA(
 
 		win.clear(/*sf::Color::White*/);
 		win.setView(view);
-		//win.draw(backg);
 		ER_IFN(testMachine.drawCycles(win,
-			[](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, 1),, )
-		//win.draw();
+			[](bmdx::CyclePoint* x) -> bool {	if (GETBIT(x->getOptions(), bmdx::CyclePoint::OPTIONS::DRAW)) return true; else return false; }, 0),, )
 		win.display();
 	}
 

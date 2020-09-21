@@ -2,6 +2,7 @@
 /testzone2
 /tx
 /.vscode
+/SFML
 /files
 hero.cpp
 hero.h
